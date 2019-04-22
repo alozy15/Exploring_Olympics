@@ -1,0 +1,535 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# A.J. Lozano\n",
+    "\n",
+    "## Wrangle and Analyze Data\n",
+    "\n",
+    "We Rate Dogs Project:\n",
+    "03/07/2019"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "import matplotlib.pyplot as plt\n",
+    "import os as os\n",
+    "import requests\n",
+    "import json\n",
+    "from PIL import Image\n",
+    "from io import BytesIO\n",
+    "import glob"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Gather \n",
+    "    Import CSV data frames for analysis\n",
+    "    Import image predictions programatically using TSV file\n",
+    "    Download API calls for Tweets\n",
+    "    \n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Gather CSV file"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "twitter_df = pd.read_csv('twitter-archive-enhanced.csv')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>tweet_id</th>\n",
+       "      <th>in_reply_to_status_id</th>\n",
+       "      <th>in_reply_to_user_id</th>\n",
+       "      <th>timestamp</th>\n",
+       "      <th>source</th>\n",
+       "      <th>text</th>\n",
+       "      <th>retweeted_status_id</th>\n",
+       "      <th>retweeted_status_user_id</th>\n",
+       "      <th>retweeted_status_timestamp</th>\n",
+       "      <th>expanded_urls</th>\n",
+       "      <th>rating_numerator</th>\n",
+       "      <th>rating_denominator</th>\n",
+       "      <th>name</th>\n",
+       "      <th>doggo</th>\n",
+       "      <th>floofer</th>\n",
+       "      <th>pupper</th>\n",
+       "      <th>puppo</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>1037</th>\n",
+       "      <td>744709971296780288</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>2016-06-20 01:54:27 +0000</td>\n",
+       "      <td>&lt;a href=\"http://twitter.com/download/iphone\" r...</td>\n",
+       "      <td>This is Harvey. He's stealthy af. 10/10 would ...</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>https://twitter.com/dog_rates/status/744709971...</td>\n",
+       "      <td>10</td>\n",
+       "      <td>10</td>\n",
+       "      <td>Harvey</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "      <td>None</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                tweet_id  in_reply_to_status_id  in_reply_to_user_id  \\\n",
+       "1037  744709971296780288                    NaN                  NaN   \n",
+       "\n",
+       "                      timestamp  \\\n",
+       "1037  2016-06-20 01:54:27 +0000   \n",
+       "\n",
+       "                                                 source  \\\n",
+       "1037  <a href=\"http://twitter.com/download/iphone\" r...   \n",
+       "\n",
+       "                                                   text  retweeted_status_id  \\\n",
+       "1037  This is Harvey. He's stealthy af. 10/10 would ...                  NaN   \n",
+       "\n",
+       "      retweeted_status_user_id retweeted_status_timestamp  \\\n",
+       "1037                       NaN                        NaN   \n",
+       "\n",
+       "                                          expanded_urls  rating_numerator  \\\n",
+       "1037  https://twitter.com/dog_rates/status/744709971...                10   \n",
+       "\n",
+       "      rating_denominator    name doggo floofer pupper puppo  \n",
+       "1037                  10  Harvey  None    None   None  None  "
+      ]
+     },
+     "execution_count": 36,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "twitter_df.sample (1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 2356 entries, 0 to 2355\n",
+      "Data columns (total 17 columns):\n",
+      "tweet_id                      2356 non-null int64\n",
+      "in_reply_to_status_id         78 non-null float64\n",
+      "in_reply_to_user_id           78 non-null float64\n",
+      "timestamp                     2356 non-null object\n",
+      "source                        2356 non-null object\n",
+      "text                          2356 non-null object\n",
+      "retweeted_status_id           181 non-null float64\n",
+      "retweeted_status_user_id      181 non-null float64\n",
+      "retweeted_status_timestamp    181 non-null object\n",
+      "expanded_urls                 2297 non-null object\n",
+      "rating_numerator              2356 non-null int64\n",
+      "rating_denominator            2356 non-null int64\n",
+      "name                          2356 non-null object\n",
+      "doggo                         2356 non-null object\n",
+      "floofer                       2356 non-null object\n",
+      "pupper                        2356 non-null object\n",
+      "puppo                         2356 non-null object\n",
+      "dtypes: float64(4), int64(3), object(10)\n",
+      "memory usage: 313.0+ KB\n"
+     ]
+    }
+   ],
+   "source": [
+    "twitter_df.info()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Gather Programattically via Requests Library"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    " The tweet image predictions, i.e., what breed of dog (or other object, animal, etc.) is present in each tweet according to a neural network. \n",
+    "\n",
+    "This file (image_predictions.tsv) is hosted on Udacity's servers and should be downloaded programmatically using the Requests library and the following \n",
+    "\n",
+    "URL: https://d17h27t6h515a5.cloudfront.net/topher/2017/August/599fd2ad_image-predictions/image-predictions.tsv"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# requests library used to get tsv file from website\n",
+    "\n",
+    "tweet_image_predictions_url = 'https://d17h27t6h515a5.cloudfront.net/topher/2017/August/599fd2ad_image-predictions/image-predictions.tsv'    \n",
+    "\n",
+    "response = requests.get(tweet_image_predictions_url)\n",
+    "\n",
+    "with open('image-predictions.tsv', mode = 'wb') as file:\n",
+    "    file.write(response.content)\n",
+    "    \n",
+    "# read tsv file into pandas df\n",
+    "image_df = pd.read_csv('image-predictions.tsv', sep = '\\t')\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 39,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<Response [200]>"
+      ]
+     },
+     "execution_count": 39,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# checking request has succeeded.  Should return response [200]>\n",
+    "response"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>tweet_id</th>\n",
+       "      <th>jpg_url</th>\n",
+       "      <th>img_num</th>\n",
+       "      <th>p1</th>\n",
+       "      <th>p1_conf</th>\n",
+       "      <th>p1_dog</th>\n",
+       "      <th>p2</th>\n",
+       "      <th>p2_conf</th>\n",
+       "      <th>p2_dog</th>\n",
+       "      <th>p3</th>\n",
+       "      <th>p3_conf</th>\n",
+       "      <th>p3_dog</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>666020888022790149</td>\n",
+       "      <td>https://pbs.twimg.com/media/CT4udn0WwAA0aMy.jpg</td>\n",
+       "      <td>1</td>\n",
+       "      <td>Welsh_springer_spaniel</td>\n",
+       "      <td>0.465074</td>\n",
+       "      <td>True</td>\n",
+       "      <td>collie</td>\n",
+       "      <td>0.156665</td>\n",
+       "      <td>True</td>\n",
+       "      <td>Shetland_sheepdog</td>\n",
+       "      <td>0.061428</td>\n",
+       "      <td>True</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "             tweet_id                                          jpg_url  \\\n",
+       "0  666020888022790149  https://pbs.twimg.com/media/CT4udn0WwAA0aMy.jpg   \n",
+       "\n",
+       "   img_num                      p1   p1_conf  p1_dog      p2   p2_conf  \\\n",
+       "0        1  Welsh_springer_spaniel  0.465074    True  collie  0.156665   \n",
+       "\n",
+       "   p2_dog                 p3   p3_conf  p3_dog  \n",
+       "0    True  Shetland_sheepdog  0.061428    True  "
+      ]
+     },
+     "execution_count": 40,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "#glance at image_df\n",
+    "image_df.head(1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 2075 entries, 0 to 2074\n",
+      "Data columns (total 12 columns):\n",
+      "tweet_id    2075 non-null int64\n",
+      "jpg_url     2075 non-null object\n",
+      "img_num     2075 non-null int64\n",
+      "p1          2075 non-null object\n",
+      "p1_conf     2075 non-null float64\n",
+      "p1_dog      2075 non-null bool\n",
+      "p2          2075 non-null object\n",
+      "p2_conf     2075 non-null float64\n",
+      "p2_dog      2075 non-null bool\n",
+      "p3          2075 non-null object\n",
+      "p3_conf     2075 non-null float64\n",
+      "p3_dog      2075 non-null bool\n",
+      "dtypes: bool(3), float64(3), int64(2), object(4)\n",
+      "memory usage: 152.1+ KB\n"
+     ]
+    }
+   ],
+   "source": [
+    "# checking the image df column and row statistics\n",
+    "image_df.info()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Gather Twitter API \n",
+    "\n",
+    "This project, uses Tweepy to query Twitter's API for additional data beyond the data included in the WeRateDogs Twitter archive\n",
+    "The Tweepy library is used to extract JSON data for each of the tweets included in the twitter-archive file"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "ModuleNotFoundError",
+     "evalue": "No module named 'tweepy'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[1;31mModuleNotFoundError\u001b[0m                       Traceback (most recent call last)",
+      "\u001b[1;32m<ipython-input-31-8e53593c7989>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[1;32mimport\u001b[0m \u001b[0mtweepy\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m\u001b[0;32m      2\u001b[0m \u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m      3\u001b[0m \u001b[0mconsumer_key\u001b[0m \u001b[1;33m=\u001b[0m \u001b[1;34m'YOUR CONSUMER KEY'\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m      4\u001b[0m \u001b[0mconsumer_secret\u001b[0m \u001b[1;33m=\u001b[0m \u001b[1;34m'YOUR CONSUMER SECRET'\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m      5\u001b[0m \u001b[0maccess_token\u001b[0m \u001b[1;33m=\u001b[0m \u001b[1;34m'YOUR ACCESS TOKEN'\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n",
+      "\u001b[1;31mModuleNotFoundError\u001b[0m: No module named 'tweepy'"
+     ]
+    }
+   ],
+   "source": [
+    "import tweepy\n",
+    "\n",
+    "#twitter api\n",
+    "\n",
+    "consumer_key = 'YOUR CONSUMER KEY'\n",
+    "consumer_secret = 'YOUR CONSUMER SECRET'\n",
+    "access_token = 'YOUR ACCESS TOKEN'\n",
+    "access_secret = 'YOUR ACCESS SECRET'\n",
+    "\n",
+    "auth = tweepy.OAuthHandler(consumer_key, consumer_secret)\n",
+    "auth.set_access_token(access_token, access_secret)\n",
+    "\n",
+    "api = tweepy.API(auth)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# For loop adds a new line of tweet_json.txt\n",
+    "with open('tweet_json.txt', 'a', encoding='utf8') as file:\n",
+    "    for tweet_id in twitter_archive['tweet_id']:\n",
+    "        try:\n",
+    "            tweet = api.get_status(tweet_id, tweet_mode='extended')\n",
+    "            json.dump(tweet._json, file)\n",
+    "            file.write('\\n')\n",
+    "        except:\n",
+    "            continue"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Assess"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Quality\n",
+    "\n",
+    "    Low quality data is commonly referred to as dirty data.  Dirty data has issues with it's content.\n",
+    "    content may be of low quality, inaccurate, corrupt, and or duplicate data.  \n",
+    "    "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Tidyness\n",
+    "\n",
+    "    commonly referred to as messy data.  Messy data has issues with it's structure.\n",
+    "    Each variable must form a column\n",
+    "    each observation forms a row\n",
+    "    each type of observational unit forms a table"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Clean\n",
+    "\n",
+    "Define\n",
+    "\n",
+    "Code\n",
+    "\n",
+    "Test"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 40,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([False, False, False, False, False, False, False, False, False,\n",
+       "       False, False, False, False, False, False, False, False])"
+      ]
+     },
+     "execution_count": 40,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "twitter_df.columns.duplicated()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 42,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from bs4 import BeautifulSoup\n",
+    "import os "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.1"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

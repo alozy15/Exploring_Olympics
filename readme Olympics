@@ -1,0 +1,32 @@
+# 120 Years of the Olympics Exploration
+## by A.J. Lozano 4/17/19
+
+## athlete_events.csv Data Set
+> I chose to explore a data set from Kaggle that held a 120 year history of the Olympics.
+I’ve always enjoyed watching the games and felt like the data set would be fun to explore.
+The data was gathered from the following link:
+https://www.kaggle.com/heesoo37/120-years-of-olympic-history-athletes-and-results
+
+
+## Summary of Findings
+> My purpose for exploring the Olympic Dataset was out of curiosity and a joy of watching the game.
+I also wanted to use the analysis as a reference that I could look back on from time to time.
+I wanted to learn about medal, country, and athlete characteristics,
+what’s changed over time, differences between Summer and Winter Games, differences between sports, etc.
+
+The U.S. has done very well over the countries time participating in the olympics.
+They lead in participation, athlete counts, and medals.  The Soviet Union and Germany
+are the next closest competitors.
+
+Weight, Height, Age, BMI and Time are a big portion of the exploratory analysis.
+Several different outcomes and athlete characteristics were determined
+by looking at the variables against one another.
+
+Athletics is the most popular sport by far.  This consists of track and field
+events. Swimming is the next sport in popularity.  Ice Hockey is the most popular
+come winter time.
+
+## Key Insights for Presentation
+> For the presentation I focus on the visuals that focus on the variables mentioned
+above, weight, height, BMI, gender, and Time.  The variables are plotted independently
+and against one another for easy to see insights and trends. 
